@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Site de Vídeos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Meu Site de Vídeos</h1>
+        <nav>
+            <button id="uploadBtn">Enviar Vídeo</button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="uploadSection" class="hidden">
+            <h2>Enviar Novo Vídeo</h2>
+            <form id="uploadForm">
+                <label for="videoFile">Selecione o Vídeo (máx. 5MB):</label>
+                <input type="file" id="videoFile" accept="video/*" required>
+                <label for="videoTitle">Título do Vídeo:</label>
+                <input type="text" id="videoTitle" placeholder="Ex: Meu Vídeo Incrível" required>
+                <button type="submit">Fazer Upload</button>
+                <p id="message"></p>
+            </form>
+        </section>
+
+        <section id="videoList">
+            <h2>Vídeos Recentes</h2>
+            <div id="videosContainer" class="videos-grid">
+                </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Meu Site de Vídeos. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
