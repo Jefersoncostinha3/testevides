@@ -1,46 +1,60 @@
-/* style.css */
+/* public/style.css - Tema Dark */
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f2f5;
-    color: #333;
+    background-color: #1a1a1a; /* Fundo escuro */
+    color: #f0f0f0; /* Texto claro */
+    line-height: 1.6;
 }
 
 header {
-    background-color: #ff6600; /* Cor similar ao Xvideos */
-    color: white;
+    background-color: #000000; /* Preto total para o cabeçalho */
+    color: #ff6600; /* Cor de destaque (laranja) para o título */
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Sombra mais evidente */
 }
 
 header h1 {
     margin: 0;
+    font-size: 2.2rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 header nav button {
-    background-color: #e05500;
+    background-color: #ff6600; /* Botão laranja vibrante */
     color: white;
     border: none;
     padding: 0.7rem 1.5rem;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 header nav button:hover {
-    background-color: #c04400;
+    background-color: #e05500; /* Laranja um pouco mais escuro no hover */
+    transform: translateY(-2px); /* Efeito sutil ao passar o mouse */
 }
 
 main {
     padding: 2rem;
     max-width: 1200px;
-    margin: 20px auto;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 30px auto; /* Mais espaço nas margens */
+    background-color: #2a2a2a; /* Fundo mais claro que o body para o conteúdo principal */
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Sombra suave */
+}
+
+h2 {
+    color: #ff6600; /* Títulos em laranja para destaque */
+    border-bottom: 2px solid #3a3a3a; /* Linha divisória discreta */
+    padding-bottom: 10px;
+    margin-bottom: 25px;
 }
 
 .hidden {
@@ -49,84 +63,131 @@ main {
 
 #uploadSection {
     margin-bottom: 3rem;
-    border-bottom: 1px solid #eee;
     padding-bottom: 2rem;
+    border-bottom: 1px solid #3a3a3a; /* Linha mais discreta */
 }
 
 #uploadForm label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.7rem; /* Mais espaço para as labels */
     font-weight: bold;
+    color: #cccccc; /* Cor para as labels */
 }
 
 #uploadForm input[type="file"],
 #uploadForm input[type="text"] {
     display: block;
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
+    width: calc(100% - 22px); /* Ajuste para padding e borda */
+    padding: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #444444; /* Borda mais escura */
+    background-color: #3a3a3a; /* Fundo do input */
+    color: #f0f0f0; /* Texto do input */
+    border-radius: 6px;
+}
+
+#uploadForm input[type="file"]::file-selector-button {
+    background-color: #ff6600;
+    color: white;
+    border: none;
+    padding: 8px 15px;
     border-radius: 4px;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: background-color 0.2s ease;
+}
+
+#uploadForm input[type="file"]::file-selector-button:hover {
+    background-color: #e05500;
 }
 
 #uploadForm button[type="submit"] {
-    background-color: #007bff;
+    background-color: #007bff; /* Azul para o botão de enviar */
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: 12px 25px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 #uploadForm button[type="submit"]:hover {
     background-color: #0056b3;
+    transform: translateY(-2px);
 }
 
 #message {
-    margin-top: 1rem;
-    color: red;
+    margin-top: 1.5rem;
     font-weight: bold;
+    color: #ff3333; /* Vermelho para mensagens de erro */
+    background-color: #331a1a; /* Fundo sutil para a mensagem */
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
 }
+
+/* Cores específicas para mensagens de sucesso/informação */
+#message[style*="color: green"] {
+    color: #33ff33 !important; /* Verde vibrante para sucesso */
+    background-color: #1a331a;
+}
+#message[style*="color: blue"] {
+    color: #66ccff !important; /* Azul claro para informação */
+    background-color: #1a1a33;
+}
+#message[style*="color: orange"] {
+    color: #ffcc00 !important; /* Laranja para aviso */
+    background-color: #332a1a;
+}
+
 
 .videos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 30px; /* Mais espaço entre os vídeos */
 }
 
 .video-item {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background-color: #333333; /* Fundo do item de vídeo */
+    border: 1px solid #444444; /* Borda sutil */
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Sombra mais profunda */
     text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.video-item:hover {
+    transform: translateY(-5px); /* Efeito de elevação ao passar o mouse */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
 }
 
 .video-item video {
     width: 100%;
     height: auto;
     display: block;
-    background-color: black; /* Placeholder for video player */
+    background-color: black;
+    border-bottom: 1px solid #444444; /* Borda entre vídeo e texto */
 }
 
 .video-item h3 {
-    margin: 1rem 0.5rem 0.5rem;
-    font-size: 1.2rem;
-    color: #333;
+    margin: 1rem 0.8rem 0.5rem;
+    font-size: 1.3rem;
+    color: #ff6600; /* Título do vídeo em laranja */
 }
 
 .video-item p {
-    margin: 0 0.5rem 1rem;
-    font-size: 0.9rem;
-    color: #666;
+    margin: 0 0.8rem 1.2rem;
+    font-size: 0.95rem;
+    color: #b0b0b0; /* Cor mais clara para a descrição */
 }
 
 footer {
     text-align: center;
-    padding: 1.5rem;
-    background-color: #333;
-    color: white;
-    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #000000; /* Rodapé preto */
+    color: #888888; /* Texto do rodapé mais sutil */
+    margin-top: 40px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
 }
