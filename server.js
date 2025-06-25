@@ -1,16 +1,26 @@
 // server.js
-require('dotenv').config(); // Carrega variáveis de ambiente do .env
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // Para lidar com o sistema de arquivos
-const cron = require('node-cron'); // Importa a biblioteca node-cron
+const fs = require('fs');
+const cron = require('node-cron');
+const ffmpeg = require('fluent-ffmpeg'); // Importa o ffmpeg
+
+// Define o caminho para os binários do FFmpeg e FFprobe se não estiverem no PATH do sistema
+// Isso pode ser útil em ambientes específicos, mas muitas vezes não é necessário se FFmpeg estiver no PATH.
+// Ex: ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+// Ex: ffmpeg.setFfprobePath('/usr/bin/ffprobe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-const UPLOADS_DIR = path.join(__dirname, 'uploads'); // Pasta para armazenar os vídeos
+
+// Define diretórios para uploads e arquivos processados
+const UPLOADS_ORIGINAL_DIR = path.join(__dirname, 'uploads', 'original'); // Vídeos originais
+const UPLOADS_PROCESSED_DIR = path.join(__dirname, 'uploads', 'processed'); // Vídeos transcodificados
+const UPLOADS_THUMBS_DIR = path.join(__dirname, 'uploads', 'thumbnails'); // Miniaturas
 
 // --- Conexão com o MongoDB ---
 mongoose.connect(MONGO_URI)
@@ -20,53 +30,98 @@ mongoose.connect(MONGO_URI)
 // --- Schema e Modelo do Vídeo ---
 const videoSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    filename: { type: String, required: true, unique: true }, // Nome do arquivo no servidor
-    path: { type: String, required: true, unique: true },     // Caminho acessível via URL
+    originalFilename: { type: String, required: true }, // Nome do arquivo original no upload
+    processedFilename: { type: String, unique: true }, // Nome do arquivo transcodificado
+    thumbnailFilename: { type: String, unique: true }, // Nome do arquivo da miniatura
+    originalPath: { type: String, required: true },     // Caminho para o vídeo original
+    processedPath: { type: String },                    // Caminho para o vídeo transcodificado
+    thumbnailPath: { type: String },                    // Caminho para a miniatura
     uploadDate: { type: Date, default: Date.now }
 });
 const Video = mongoose.model('Video', videoSchema);
 
-// --- Configuração do Multer para Upload de Arquivos ---
-// Cria a pasta 'uploads' se ela não existir
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+// --- Configuração do Multer para Upload de Arquivos Originais ---
+// Garante que os diretórios existam
+[UPLOADS_ORIGINAL_DIR, UPLOADS_PROCESSED_DIR, UPLOADS_THUMBS_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, UPLOADS_DIR); // Onde os arquivos serão salvos
+        cb(null, UPLOADS_ORIGINAL_DIR); // Salva o arquivo original aqui
     },
     filename: (req, file, cb) => {
-        // Gera um nome de arquivo único para evitar colisões
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const fileExtension = path.extname(file.originalname);
         cb(null, file.fieldname + '-' + uniqueSuffix + fileExtension);
     }
 });
 
-// Filtro de arquivo para aceitar apenas vídeos e limitar o tamanho
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // Limite de 5 MB em bytes
+        fileSize: 5 * 1024 * 1024 // Limite de 5 MB
     },
     fileFilter: (req, file, cb) => {
-        const allowedMimes = ['video/mp4', 'video/webm', 'video/ogg']; // Tipos MIME de vídeo comuns
+        const allowedMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime']; // Adicione mais se necessário
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Tipo de arquivo não suportado. Apenas vídeos (mp4, webm, ogg) são permitidos!'), false);
+            cb(new Error('Tipo de arquivo não suportado. Apenas vídeos são permitidos!'), false);
         }
     }
 });
 
 // --- Middlewares ---
-app.use(express.json()); // Para parsear JSON
-app.use(express.urlencoded({ extended: true })); // Para parsear dados de formulário (do formulário HTML)
-app.use(express.static(path.join(__dirname, 'public'))); // Serve os arquivos estáticos do front-end
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve a pasta de uploads estaticamente para que os vídeos possam ser acessados pelo navegador
-app.use('/uploads', express.static(UPLOADS_DIR));
+// Serve os diretórios de vídeos processados e miniaturas estaticamente
+app.use('/uploads/processed', express.static(UPLOADS_PROCESSED_DIR));
+app.use('/uploads/thumbnails', express.static(UPLOADS_THUMBS_DIR));
+
+// --- Funções de Processamento de Vídeo ---
+
+// Função para gerar miniatura
+function generateThumbnail(videoInputPath, outputFilename, callback) {
+    const outputPath = path.join(UPLOADS_THUMBS_DIR, outputFilename);
+    ffmpeg(videoInputPath)
+        .screenshots({
+            timestamps: ['00:00:01.000'], // Pega um frame no 1º segundo
+            filename: outputFilename,
+            folder: UPLOADS_THUMBS_DIR,
+            size: '320x240' // Tamanho da miniatura
+        })
+        .on('end', () => {
+            console.log(`Miniatura gerada: ${outputPath}`);
+            callback(null, `/uploads/thumbnails/${outputFilename}`);
+        })
+        .on('error', (err) => {
+            console.error('Erro ao gerar miniatura:', err);
+            callback(err);
+        });
+}
+
+// Função para transcodificar vídeo
+function transcodeVideo(videoInputPath, outputFilename, callback) {
+    const outputPath = path.join(UPLOADS_PROCESSED_DIR, outputFilename);
+    ffmpeg(videoInputPath)
+        .output(outputPath)
+        .videoCodec('libx264') // Codec de vídeo padrão e compatível
+        .audioCodec('aac')     // Codec de áudio padrão e compatível
+        .format('mp4')         // Formato de saída MP4
+        .on('end', () => {
+            console.log(`Vídeo transcodificado: ${outputPath}`);
+            callback(null, `/uploads/processed/${outputFilename}`);
+        })
+        .on('error', (err) => {
+            console.error('Erro ao transcodificar vídeo:', err);
+            callback(err);
+        });
+}
 
 // --- Rotas da API ---
 
@@ -74,50 +129,82 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 app.post('/api/upload', upload.single('video'), async (req, res) => {
     try {
         if (!req.file) {
-            // Este erro pode vir do Multer (ex: tipo de arquivo não permitido, arquivo muito grande)
-            // ou se nenhum arquivo foi selecionado.
             return res.status(400).json({ message: 'Nenhum arquivo de vídeo enviado ou arquivo inválido.' });
         }
 
         const { title } = req.body;
         if (!title) {
-            // Se o título não for fornecido, exclui o arquivo que foi salvo
-            fs.unlinkSync(req.file.path);
+            fs.unlinkSync(req.file.path); // Remove o arquivo original se não tiver título
             return res.status(400).json({ message: 'O título do vídeo é obrigatório.' });
         }
 
-        // Salva os metadados do vídeo no MongoDB
+        const originalVideoPath = req.file.path;
+        const baseFilename = path.parse(req.file.filename).name;
+        const processedFilename = `${baseFilename}_processed.mp4`;
+        const thumbnailFilename = `${baseFilename}_thumb.jpg`;
+
+        // Promessas para gerar miniatura e transcodificar o vídeo em paralelo
+        const [thumbnailPublicPath, processedVideoPublicPath] = await Promise.all([
+            new Promise((resolve, reject) => generateThumbnail(originalVideoPath, thumbnailFilename, (err, path) => err ? reject(err) : resolve(path))),
+            new Promise((resolve, reject) => transcodeVideo(originalVideoPath, processedFilename, (err, path) => err ? reject(err) : resolve(path)))
+        ]);
+
+        // Opcional: Remover o vídeo original após o processamento bem-sucedido
+        fs.unlink(originalVideoPath, (err) => {
+            if (err) console.error(`Erro ao apagar arquivo original ${originalVideoPath}:`, err);
+            else console.log(`Arquivo original ${originalVideoPath} apagado.`);
+        });
+
+        // Salva os metadados do vídeo (incluindo paths da miniatura e do vídeo processado)
         const newVideo = new Video({
             title: title,
-            filename: req.file.filename,
-            path: `/uploads/${req.file.filename}` // Caminho público para acessar o vídeo
+            originalFilename: req.file.filename,
+            processedFilename: processedFilename,
+            thumbnailFilename: thumbnailFilename,
+            originalPath: originalVideoPath,
+            processedPath: processedVideoPublicPath,
+            thumbnailPath: thumbnailPublicPath
         });
 
         await newVideo.save();
-        res.status(201).json({ message: 'Vídeo enviado com sucesso!', video: newVideo });
+        res.status(201).json({ message: 'Vídeo enviado e processado com sucesso!', video: newVideo });
 
     } catch (error) {
-        console.error('Erro no upload de vídeo:', error);
-        // Se houver um erro durante o processo, tenta remover o arquivo se ele foi salvo
+        console.error('Erro no upload ou processamento de vídeo:', error);
+        // Tenta remover o arquivo original e os processados/miniaturas se o erro ocorreu APÓS o upload inicial
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
-        // Tratamento de erros específicos do Multer
+        if (fs.existsSync(path.join(UPLOADS_PROCESSED_DIR, processedFilename))) {
+             fs.unlinkSync(path.join(UPLOADS_PROCESSED_DIR, processedFilename));
+        }
+        if (fs.existsSync(path.join(UPLOADS_THUMBS_DIR, thumbnailFilename))) {
+             fs.unlinkSync(path.join(UPLOADS_THUMBS_DIR, thumbnailFilename));
+        }
+
         if (error instanceof multer.MulterError) {
             if (error.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).json({ message: `O arquivo é muito grande. O tamanho máximo permitido é de 5 MB.` });
             }
             return res.status(400).json({ message: `Erro no upload: ${error.message}` });
         }
-        res.status(500).json({ message: 'Erro interno do servidor ao enviar vídeo.', error: error.message });
+        res.status(500).json({ message: 'Erro interno do servidor ao enviar e processar vídeo.', error: error.message });
     }
 });
 
-// Rota para Listar Vídeos
+// Rota para Listar Vídeos (agora pegando o path do vídeo processado e da miniatura)
 app.get('/api/videos', async (req, res) => {
     try {
-        const videos = await Video.find().sort({ uploadDate: -1 }); // Busca os vídeos mais recentes primeiro
-        res.status(200).json(videos);
+        const videos = await Video.find().sort({ uploadDate: -1 });
+        // Mapeia para retornar apenas os paths processados e da miniatura para o frontend
+        const formattedVideos = videos.map(video => ({
+            _id: video._id,
+            title: video.title,
+            path: video.processedPath, // Usa o vídeo transcodificado
+            thumbnailPath: video.thumbnailPath, // Usa a miniatura
+            uploadDate: video.uploadDate
+        }));
+        res.status(200).json(formattedVideos);
     } catch (error) {
         console.error('Erro ao buscar vídeos:', error);
         res.status(500).json({ message: 'Erro interno do servidor ao buscar vídeos.', error: error.message });
@@ -128,32 +215,27 @@ app.get('/api/videos', async (req, res) => {
 async function cleanAllVideos() {
     console.log(`[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] Iniciando tarefa de limpeza de vídeos...`);
     try {
-        // 1. Apagar os arquivos físicos da pasta 'uploads'
-        // Primeiro, obtemos a lista de arquivos registrados no banco de dados para apagar apenas eles.
-        // Isso é mais seguro para não apagar outros arquivos que possam estar na pasta por engano.
-        const videosInDb = await Video.find({}, 'filename'); // Busca apenas o 'filename'
-        const filenamesToDelete = videosInDb.map(video => video.filename);
+        // 1. Apagar os arquivos físicos das pastas
+        const directoriesToClean = [UPLOADS_ORIGINAL_DIR, UPLOADS_PROCESSED_DIR, UPLOADS_THUMBS_DIR];
 
-        fs.readdir(UPLOADS_DIR, (err, files) => {
-            if (err) {
-                console.error('Erro ao ler diretório de uploads:', err);
-                return;
-            }
-
-            for (const file of files) {
-                // Apenas apaga arquivos que estavam registrados no banco de dados
-                if (filenamesToDelete.includes(file)) {
-                    const filePath = path.join(UPLOADS_DIR, file);
+        for (const dir of directoriesToClean) {
+            fs.readdir(dir, (err, files) => {
+                if (err) {
+                    console.error(`Erro ao ler diretório ${dir}:`, err);
+                    return;
+                }
+                for (const file of files) {
+                    const filePath = path.join(dir, file);
                     fs.unlink(filePath, err => {
                         if (err) {
-                            console.error(`Erro ao apagar o arquivo ${file}:`, err);
+                            console.error(`Erro ao apagar o arquivo ${filePath}:`, err);
                         } else {
-                            console.log(`Arquivo ${file} apagado com sucesso.`);
+                            console.log(`Arquivo ${filePath} apagado com sucesso.`);
                         }
                     });
                 }
-            }
-        });
+            });
+        }
 
         // 2. Apagar todos os registros de vídeos do MongoDB
         const result = await Video.deleteMany({});
@@ -167,23 +249,13 @@ async function cleanAllVideos() {
 }
 
 // --- AGENDADOR (CRON JOB) ---
-// Agendar a limpeza para cada 6 horas
-// A string '0 */6 * * *' significa:
-// 0: minuto (no minuto 0 da hora)
-// */6: hora (a cada 6 horas: 00:00, 06:00, 12:00, 18:00 no fuso horário do servidor)
-// *: dia do mês (qualquer)
-// *: mês (qualquer)
-// *: dia da semana (qualquer)
-// Use um fuso horário específico para garantir que funcione como esperado.
 cron.schedule('0 */6 * * *', () => {
     cleanAllVideos();
 }, {
-    timezone: "America/Sao_Paulo" // Ou o fuso horário que você desejar
+    timezone: "America/Sao_Paulo"
 });
 
-// Rota padrão para servir o index.html (SPA - Single Page Application)
-// Garante que o refresh da página ou acesso direto a rotas não existentes
-// carregue o seu app React/Vue/Vanilla JS.
+// Rota padrão para servir o index.html (SPA)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
