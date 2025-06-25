@@ -11,13 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Função para buscar e exibir vídeos
     const fetchVideos = async () => {
         try {
-            // Requisição para a API do seu back-end para obter a lista de vídeos
             const response = await fetch('/api/videos');
             if (!response.ok) {
                 throw new Error('Erro ao buscar vídeos.');
             }
             const videos = await response.json();
-            videosContainer.innerHTML = ''; // Limpa a lista existente
+            videosContainer.innerHTML = '';
 
             if (videos.length === 0) {
                 videosContainer.innerHTML = '<p>Nenhum vídeo disponível ainda. Seja o primeiro a enviar!</p>';
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const videoItem = document.createElement('div');
                 videoItem.classList.add('video-item');
                 videoItem.innerHTML = `
-                    <video controls src="${video.path}" poster="${video.thumbnailPath || ''}"></video>
+                    <video controls src="${video.path}" poster="${video.thumbnailPath}"></video> <-- ALTERADO AQUI
                     <h3>${video.title}</h3>
                     <p>${video.description || ''}</p>
                 `;
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Alterna a visibilidade da seção de upload
     uploadBtn.addEventListener('click', () => {
         uploadSection.classList.toggle('hidden');
         if (!uploadSection.classList.contains('hidden')) {
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Lógica para envio do formulário
     uploadForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
@@ -79,10 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('title', videoTitle);
 
         try {
-            message.textContent = 'Enviando vídeo... Por favor, aguarde.';
+            message.textContent = 'Enviando e processando vídeo... Isso pode levar alguns minutos.';
             message.style.color = 'blue';
 
-            // Requisição POST para o seu back-end, que vai lidar com o upload e salvar no MongoDB
             const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
@@ -90,11 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const result = await response.json();
-                message.textContent = 'Vídeo enviado com sucesso!';
+                message.textContent = 'Vídeo enviado e processado com sucesso!';
                 message.style.color = 'green';
                 uploadForm.reset();
                 uploadSection.classList.add('hidden');
-                fetchVideos(); // Atualiza a lista de vídeos após o upload
+                fetchVideos();
             } else {
                 const errorData = await response.json();
                 message.textContent = `Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`;
@@ -107,6 +103,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Carrega os vídeos quando a página é carregada pela primeira vez
     fetchVideos();
 });
