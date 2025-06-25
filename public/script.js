@@ -4,14 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadSection = document.getElementById('uploadSection');
     const uploadForm = document.getElementById('uploadForm');
     const videoFile = document.getElementById('videoFile');
-    const videoTitleInput = document.getElementById('videoTitle'); // Pegar o input do título
+    const videoTitleInput = document.getElementById('videoTitle');
     const message = document.getElementById('message');
     const videosContainer = document.getElementById('videosContainer');
 
     // Função para buscar e exibir vídeos
     const fetchVideos = async () => {
         try {
-            const response = await fetch('/api/videos'); // Rota da API para buscar vídeos
+            // Requisição para a API do seu back-end para obter a lista de vídeos
+            const response = await fetch('/api/videos');
             if (!response.ok) {
                 throw new Error('Erro ao buscar vídeos.');
             }
@@ -43,16 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadBtn.addEventListener('click', () => {
         uploadSection.classList.toggle('hidden');
         if (!uploadSection.classList.contains('hidden')) {
-            message.textContent = ''; // Limpa a mensagem ao abrir
+            message.textContent = '';
         }
     });
 
     // Lógica para envio do formulário
     uploadForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Impede o envio padrão do formulário
+        event.preventDefault();
 
-        message.textContent = ''; // Limpa mensagens anteriores
-        message.style.color = 'red'; // Cor padrão para erros
+        message.textContent = '';
+        message.style.color = 'red';
 
         if (videoFile.files.length === 0) {
             message.textContent = 'Por favor, selecione um arquivo de vídeo.';
@@ -73,17 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Cria um objeto FormData para enviar o arquivo e o título
         const formData = new FormData();
-        formData.append('video', file); // 'video' é o nome do campo esperado no back-end
-        formData.append('title', videoTitle); // 'title' é o nome do campo esperado no back-end
+        formData.append('video', file);
+        formData.append('title', videoTitle);
 
         try {
             message.textContent = 'Enviando vídeo... Por favor, aguarde.';
             message.style.color = 'blue';
 
-            // Faz a requisição POST para o seu back-end
-            const response = await fetch('/api/upload', { // Rota da API para upload
+            // Requisição POST para o seu back-end, que vai lidar com o upload e salvar no MongoDB
+            const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -92,11 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 message.textContent = 'Vídeo enviado com sucesso!';
                 message.style.color = 'green';
-                uploadForm.reset(); // Limpa o formulário
-                uploadSection.classList.add('hidden'); // Esconde a seção de upload
-                fetchVideos(); // Atualiza a lista de vídeos
+                uploadForm.reset();
+                uploadSection.classList.add('hidden');
+                fetchVideos(); // Atualiza a lista de vídeos após o upload
             } else {
-                const errorData = await response.json(); // Pega a mensagem de erro do back-end
+                const errorData = await response.json();
                 message.textContent = `Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`;
                 message.style.color = 'red';
             }
@@ -107,6 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Carrega os vídeos quando a página é carregada
+    // Carrega os vídeos quando a página é carregada pela primeira vez
     fetchVideos();
 });
