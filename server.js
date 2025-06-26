@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // Define diretórios para uploads e arquivos processados
-const UPLOADS_ORIGINAL_DIR = path.join(__dirname, 'uploads', 'original'); // Vídeos originais (serão movidos)
-const UPLOADS_PROCESSED_DIR = path.join(__dirname, 'uploads', 'processed'); // Vídeos "finalizados" (apenas movidos)
+const UPLOADS_ORIGINAL_DIR = path.join(__dirname, 'uploads', 'original'); // Vídeos originais (serão temporários)
+const UPLOADS_PROCESSED_DIR = path.join(__dirname, 'uploads', 'processed'); // Vídeos "finalizados"
 const UPLOADS_THUMBS_DIR = path.join(__dirname, 'uploads', 'thumbnails'); // Miniaturas (não serão mais geradas automaticamente)
 
 // --- Conexão com o MongoDB ---
@@ -60,8 +60,6 @@ const upload = multer({
         fileSize: 5 * 1024 * 1024 // Limite de 5 MB
     },
     fileFilter: (req, file, cb) => {
-        // Agora aceitamos mais tipos, pois não estamos transcodificando para MP4
-        // Mas o navegador ainda precisa ser capaz de reproduzir!
         const allowedMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']; // MP4, WebM, OGG, MOV, AVI, MKV
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true);
@@ -78,9 +76,7 @@ app.use(express.static(path.join(__dirname, 'public'))); // Serve os arquivos es
 
 // Serve os diretórios de vídeos processados estaticamente
 app.use('/uploads/processed', express.static(UPLOADS_PROCESSED_DIR));
-// Se quiser um placeholder de miniatura, você pode criar um "public/placeholder-thumbnail.jpg"
-// e servi-lo aqui ou apenas apontar para ele no Schema
-app.use('/uploads/thumbnails', express.static(UPLOADS_THUMBS_DIR)); // Embora não gere mais dinamicamente
+app.use('/uploads/thumbnails', express.static(UPLOADS_THUMBS_DIR)); 
 
 // --- Rotas da API ---
 
@@ -101,27 +97,26 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
         const originalVideoPath = req.file.path; // Caminho temporário do arquivo recém-subido
 
         // Define o nome do arquivo final e o caminho de destino
-        // O arquivo final manterá o nome gerado pelo Multer
         finalVideoFilename = path.basename(originalVideoPath);
         const finalVideoPath = path.join(UPLOADS_PROCESSED_DIR, finalVideoFilename);
         const processedVideoPublicPath = `/uploads/processed/${finalVideoFilename}`;
 
-        console.log(`Movendo vídeo original para diretório processado: ${originalVideoPath} -> ${finalVideoPath}`);
+        console.log(`Copiando vídeo de: ${originalVideoPath} para: ${finalVideoPath}`);
         
-        // Move o arquivo original para o diretório 'processed'
-        await fs.promises.rename(originalVideoPath, finalVideoPath);
+        // --- ALTERAÇÃO AQUI: Usando copyFile e unlink em vez de rename ---
+        await fs.promises.copyFile(originalVideoPath, finalVideoPath); // Copia o arquivo
+        await fs.promises.unlink(originalVideoPath); // Apaga o arquivo original temporário
+        // --- FIM DA ALTERAÇÃO ---
 
-        // CORREÇÃO AQUI: console.log()
-        console.log('Vídeo movido. Salvando metadados...');
+        console.log('Vídeo copiado e original removido. Salvando metadados...');
 
         // Salva os metadados do vídeo
         const newVideo = new Video({
             title: title,
             originalFilename: req.file.filename,
-            processedFilename: finalVideoFilename, // Agora é o mesmo que o nome do arquivo movido
-            originalPath: originalVideoPath, // Mantém o path original por referência, mas o arquivo já foi movido
-            processedPath: processedVideoPublicPath, // Caminho público para o vídeo movido
-            // thumbnailPath usará o valor default definido no schema
+            processedFilename: finalVideoFilename, 
+            originalPath: originalVideoPath, 
+            processedPath: processedVideoPublicPath, 
         });
 
         await newVideo.save();
@@ -132,14 +127,14 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
         
         // Tenta remover o arquivo original temporário se ainda existir
         if (req.file && fs.existsSync(req.file.path)) {
-            console.log(`Tentando apagar arquivo original temporário: ${req.file.path}`);
+            console.log(`Tentando apagar arquivo original temporário (após erro): ${req.file.path}`);
             fs.unlinkSync(req.file.path);
         }
-        // Tenta remover o arquivo já movido para processed, se o erro ocorreu após o movimento
+        // Tenta remover o arquivo já copiado para processed, se o erro ocorreu após a cópia
         if (finalVideoFilename) {
             const potentialFinalPath = path.join(UPLOADS_PROCESSED_DIR, finalVideoFilename);
             if (fs.existsSync(potentialFinalPath)) {
-                console.log(`Tentando apagar arquivo finalizado (mas com erro): ${potentialFinalPath}`);
+                console.log(`Tentando apagar arquivo processado (mas com erro): ${potentialFinalPath}`);
                 fs.unlinkSync(potentialFinalPath);
             }
         }
@@ -176,9 +171,7 @@ app.get('/api/videos', async (req, res) => {
 async function cleanAllVideos() {
     console.log(`[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] Iniciando tarefa de limpeza de vídeos...`);
     try {
-        // 1. Apagar os arquivos físicos das pastas
-        // Agora só precisamos limpar 'processed' e 'original'
-        const directoriesToClean = [UPLOADS_ORIGINAL_DIR, UPLOADS_PROCESSED_DIR, UPLOADS_THUMBS_DIR]; // Mantém THUMBS_DIR para limpeza de resíduos
+        const directoriesToClean = [UPLOADS_ORIGINAL_DIR, UPLOADS_PROCESSED_DIR, UPLOADS_THUMBS_DIR]; 
 
         for (const dir of directoriesToClean) {
             fs.readdir(dir, (err, files) => {
