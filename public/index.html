@@ -1,43 +1,42 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> - GRU - Videos - </title>
-    <link rel="stylesheet" href="style.css">
+    <title> - Gru videos - </title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <header>
-        <h1> - Sejam Livres - GRU - Site de Videos - </h1>
-        <nav>
-            <button id="uploadBtn">Enviar Vídeo</button>
-        </nav>
+        <h1> - GRU Videos -</h1>
     </header>
-
     <main>
         <section id="uploadSection" class="hidden">
             <h2>Enviar Novo Vídeo</h2>
             <form id="uploadForm">
-                <label for="videoFile">Selecione o Vídeo (máx. 5MB):</label>
-                <input type="file" id="videoFile" accept="video/*" required>
                 <label for="videoTitle">Título do Vídeo:</label>
-                <input type="text" id="videoTitle" placeholder="Ex: Meu Vídeo Incrível" required>
-                <button type="submit">Fazer Upload</button>
+                <input type="text" id="videoTitle" required>
+                
+                <label for="videoFile">Selecione o Vídeo (até 5MB):</label>
+                <input type="file" id="videoFile" accept="video/*" required>
+                
+                <div id="progressBarContainer">
+                    <div id="progressBar"></div>
+                </div>
+                
+                <button type="submit">Enviar Vídeo</button>
                 <p id="message"></p>
             </form>
         </section>
 
-        <section id="videoList">
-            <h2>Vídeos Recentes</h2>
-            <div id="videosContainer" class="videos-grid">
+        <button id="uploadBtn">Enviar Vídeo</button>
+
+        <section id="videosList">
+            <h2>Vídeos Disponíveis</h2>
+            <div id="videosContainer">
                 </div>
         </section>
     </main>
-
-    <footer>
-        <p>&copy; 2025 Meu Site de Vídeos. Todos os direitos reservados.</p>
-    </footer>
-
-    <script src="script.js"></script>
+    <script src="/script.js"></script>
 </body>
 </html>
