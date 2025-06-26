@@ -8,9 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = document.getElementById('message');
     const videosContainer = document.getElementById('videosContainer');
 
-    // NOVOS ELEMENTOS: Barra de progresso
+    // Elementos da Barra de Progresso e Indicador de Processamento
     const progressBarContainer = document.getElementById('progressBarContainer');
     const progressBar = document.getElementById('progressBar');
+    const processingIndicator = document.getElementById('processingIndicator'); // Novo elemento
 
     // Função para buscar e exibir vídeos
     const fetchVideos = async () => {
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videos.forEach(video => {
                 const videoItem = document.createElement('div');
                 videoItem.classList.add('video-item');
+                // Usando thumbnailPath para o poster do vídeo
                 videoItem.innerHTML = `
                     <video controls src="${video.path}" poster="${video.thumbnailPath}"></video>
                     <h3>${video.title}</h3>
@@ -47,10 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.classList.toggle('hidden');
         if (!uploadSection.classList.contains('hidden')) {
             message.textContent = '';
-            // Esconde a barra de progresso ao abrir a seção de upload
+            // Esconde e reseta a barra de progresso e o indicador ao abrir a seção de upload
             progressBarContainer.style.display = 'none';
             progressBar.style.width = '0%';
-            progressBar.textContent = ''; // Limpa o texto da porcentagem
+            progressBar.textContent = '';
+            processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
         }
     });
 
@@ -60,10 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
         message.textContent = '';
         message.style.color = 'red';
 
-        // Resetar e esconder a barra de progresso antes de um novo envio
+        // Resetar e esconder a barra de progresso e o indicador antes de um novo envio
         progressBarContainer.style.display = 'none';
         progressBar.style.width = '0%';
         progressBar.textContent = '';
+        processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
 
         if (videoFile.files.length === 0) {
             message.textContent = 'Por favor, selecione um arquivo de vídeo.';
@@ -109,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Evento quando o upload termina (sucesso ou falha)
             xhr.addEventListener('load', () => {
+                processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento ao receber resposta
+
                 if (xhr.status >= 200 && xhr.status < 300) {
                     // Sucesso
                     const result = JSON.parse(xhr.responseText);
@@ -133,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Evento de erro de rede
             xhr.addEventListener('error', () => {
+                processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento em caso de erro de rede
                 message.textContent = `Erro de rede ou servidor.`;
                 message.style.color = 'red';
                 progressBarContainer.style.display = 'none'; // Esconde a barra
@@ -143,17 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             xhr.send(formData); // Envia o FormData
             
-            // Esta mensagem aparecerá após o arquivo ser enviado, mas antes de o servidor responder.
-            // Ela indica que o processamento no servidor está acontecendo.
+            // Esta mensagem e o indicador aparecerão após o arquivo ser enviado,
+            // mas antes de o servidor responder. Ela indica que o processamento no servidor está acontecendo.
             message.textContent = 'Vídeo enviado. Processando no servidor... Isso pode levar alguns minutos.';
             message.style.color = 'blue';
+            processingIndicator.classList.remove('hidden'); // Mostra o indicador de processamento
 
-        } catch (error) {
+        } // catch para erros que ocorrem antes do XHR ser enviado (ex: validação de arquivo)
+        catch (error) {
             message.textContent = `Erro inesperado: ${error.message}`;
             message.style.color = 'red';
-            progressBarContainer.style.display = 'none'; // Esconde a barra
-            progressBar.style.width = '0%'; // Reseta a barra
+            progressBarContainer.style.display = 'none';
+            progressBar.style.width = '0%';
             progressBar.textContent = '';
+            processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
             console.error('Erro geral no script:', error);
         }
     });
