@@ -108,7 +108,9 @@ function generateThumbnail(videoInputPath, outputFilename, callback) {
 // Função para transcodificar vídeo
 function transcodeVideo(videoInputPath, outputFilename, callback) {
     const outputPath = path.join(UPLOADS_PROCESSED_DIR, outputFilename);
-    ffmpeg(videoInputPath)
+    
+    // Cria uma instância do comando ffmpeg
+    const command = ffmpeg(videoInputPath)
         .output(outputPath)
         .videoCodec('libx264') // Codec de vídeo padrão e compatível
         .audioCodec('aac')     // Codec de áudio padrão e compatível
@@ -123,11 +125,14 @@ function transcodeVideo(videoInputPath, outputFilename, callback) {
             console.log(`Vídeo transcodificado: ${outputPath}`);
             callback(null, `/uploads/processed/${outputFilename}`);
         })
-        .on('error', (err) => {
+        .on('error', (err, stdout, stderr) => { // <-- ATENÇÃO A ESTAS VARIÁVEIS ADICIONADAS
             console.error('Erro ao transcodificar vídeo:', err.message);
+            console.error('FFmpeg stdout:\n', stdout); // Loga a saída padrão do FFmpeg
+            console.error('FFmpeg stderr:\n', stderr); // Loga a saída de erro padrão do FFmpeg
             callback(err);
-        })
-        .run();
+        });
+        
+    command.run(); // Executa o comando ffmpeg
 }
 
 // --- Rotas da API ---
