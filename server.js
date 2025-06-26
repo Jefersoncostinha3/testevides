@@ -111,7 +111,8 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
         // Move o arquivo original para o diretório 'processed'
         await fs.promises.rename(originalVideoPath, finalVideoPath);
 
-        console('Vídeo movido. Salvando metadados...');
+        // CORREÇÃO AQUI: console.log()
+        console.log('Vídeo movido. Salvando metadados...');
 
         // Salva os metadados do vídeo
         const newVideo = new Video({
