@@ -115,12 +115,12 @@ function transcodeVideo(videoInputPath, outputFilename, callback) {
         .videoCodec('libx264') // Codec de vídeo padrão e compatível
         .audioCodec('aac')     // Codec de áudio padrão e compatível
         .format('mp4')         // Formato de saída MP4
-        // --- NOVO TAMANHO DE RESOLUÇÃO: 480p de largura ---
-        .size('480x?') // Reduz a resolução para 480px de largura, mantendo proporção.
-        .addOption('-crf', '28') // Qualidade de vídeo. Valores mais altos (ex: 28) = menor qualidade/menor arquivo/mais rápido.
-        .addOption('-preset', 'fast') // Velocidade de codificação. 'fast' é um bom equilíbrio, 'ultrafast' é mais rápido.
+        // --- OPÇÕES MAIS AGRESSIVAS PARA MÁXIMA VELOCIDADE ---
+        .size('360x?')            // Resolução ainda menor (360p de largura)
+        .addOption('-crf', '32')  // Qualidade mais baixa para menor arquivo/maior velocidade
+        .addOption('-preset', 'ultrafast') // O mais rápido, menor compressão
         .addOption('-movflags', 'faststart') // Otimiza para streaming web (metadados no início)
-        // --- FIM DAS OPÇÕES ---
+        // --- FIM DAS OPÇÕES AGRESSIVAS ---
         .on('start', function(commandLine) {
             console.log('Spawned Ffmpeg with command: ' + commandLine);
         })
