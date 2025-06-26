@@ -1,392 +1,50 @@
-/* public/style.css */
+/* public/style.css - Adicione no final do arquivo */
 
-/* Reset básico */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary-bg: #1a1a2e; /* Azul marinho escuro */
-    --secondary-bg: #16213e; /* Azul mais escuro */
-    --card-bg: #0f3460; /* Azul médio para cards */
-    --accent-color: #e94560; /* Vermelho/rosa vibrante */
-    --text-color: #e0e0e0; /* Cinza claro */
-    --light-text: #f0f0f0;
-    --border-color: #0f3460;
-    --shadow-light: rgba(0, 0, 0, 0.2);
-    --shadow-dark: rgba(0, 0, 0, 0.4);
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--primary-bg);
-    color: var(--text-color);
-    line-height: 1.6;
-    overflow-x: hidden; /* Evita scroll horizontal em excesso */
-    position: relative;
-    min-height: 100vh;
-}
-
-/* Animação de Fundo Abstrata */
-.background-animation {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, var(--primary-bg) 0%, #0c1831 50%, var(--primary-bg) 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-    opacity: 0.7;
-    z-index: -1;
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Header */
-.app-header {
-    background-color: rgba(12, 18, 30, 0.9); /* Mais transparente */
-    backdrop-filter: blur(5px); /* Efeito de vidro embaçado */
-    color: var(--light-text);
-    padding: 1.5rem 0;
-    text-align: center;
-    border-bottom: 2px solid var(--border-color);
-    box-shadow: 0 4px 10px var(--shadow-dark);
-}
-
-.app-title {
-    font-size: 2.8rem;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.app-title i {
-    margin-right: 15px;
-    color: var(--accent-color);
-    font-size: 2.2rem;
-}
-
-.app-slogan {
-    font-size: 1.1rem;
-    font-weight: 300;
-    color: #b0b0b0;
-}
-
-/* Main Container */
-.app-container {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 25px;
-    background-color: rgba(22, 33, 62, 0.9); /* Fundo principal com transparência */
-    border-radius: 12px;
-    box-shadow: 0 0 25px var(--shadow-dark);
-    position: relative;
-    z-index: 1; /* Garante que o conteúdo fique acima do fundo animado */
-}
-
-/* Seções */
-.upload-section, .videos-list-section {
-    margin-bottom: 30px;
-    padding: 25px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+/* Seção de Contato */
+.contact-section {
     background-color: var(--secondary-bg);
-    box-shadow: 0 2px 10px var(--shadow-light);
-    transition: all 0.3s ease; /* Transição para o toggle */
-}
-
-.section-title {
-    color: var(--accent-color);
-    margin-bottom: 20px;
-    font-size: 2rem;
-    font-weight: 600;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.section-title i {
-    margin-left: 10px;
-    font-size: 1.6rem;
-}
-
-/* Formulário de Upload */
-.upload-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-group {
-    margin-bottom: 10px;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text-color);
-    font-size: 1.1rem;
-}
-
-.form-input, .form-input-file {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: #2b3a5b; /* Input background */
-    color: var(--light-text);
-    font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-input:focus, .form-input-file:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.3);
-    outline: none;
-}
-
-/* Estilo para input[type="file"] */
-.form-input-file::-webkit-file-upload-button {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-right: 15px;
-    transition: background-color 0.3s ease;
-}
-
-.form-input-file::-webkit-file-upload-button:hover {
-    background-color: #c0392b;
-}
-
-/* Botões */
-.btn {
-    padding: 12px 25px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-decoration: none; /* Para links, se aplicável */
-}
-
-.btn-primary {
-    background-color: var(--accent-color);
-    color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.btn-primary:hover {
-    background-color: #c0392b;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-.btn-secondary {
-    background-color: #3f72af; /* Um azul mais suave */
-    color: white;
-    margin: 20px auto; /* Centraliza o botão de toggle */
-    width: fit-content;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.btn-secondary:hover {
-    background-color: #2a527f;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* Mensagens de Feedback */
-.message {
-    margin-top: 20px;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.1rem;
-    opacity: 0; /* Esconde por padrão, JS mostrará */
-    transform: translateY(10px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.message.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.message[data-type="success"] { color: #d4edda; background-color: #28a745; border: 1px solid #218838; }
-.message[data-type="error"] { color: #f8d7da; background-color: #dc3545; border: 1px solid #c82333; }
-.message[data-type="info"] { color: #cce5ff; background-color: #007bff; border: 1px solid #0056b3; }
-
-/* Barra de Progresso */
-.progress-bar-container {
-    width: 100%;
-    background-color: #2b3a5b; /* Cor de fundo da barra */
-    border-radius: 8px;
-    margin-bottom: 20px;
-    height: 30px;
-    overflow: hidden;
-    display: none; /* Escondido por padrão */
-    box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.2);
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(to right, #4CAF50, #8bc34a); /* Gradiente verde */
-    border-radius: 8px;
-    text-align: center;
-    color: white;
-    line-height: 30px;
-    font-weight: bold;
-    font-size: 1em;
-    transition: width 0.3s ease;
-}
-
-/* Indicador de Processamento */
-.processing-indicator {
-    margin-top: 15px;
-    color: var(--text-color);
-    font-size: 1em;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    animation: pulse 1.5s infinite ease-in-out; /* Animação de pulso */
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.05); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top-color: var(--accent-color);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Container de Vídeos */
-.videos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Mais espaçoso */
-    gap: 30px; /* Mais espaço entre os cards */
-    margin-top: 25px;
-}
-
-/* Cards de Vídeo */
-.video-item {
-    background-color: var(--card-bg); /* Fundo do card */
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 6px 15px var(--shadow-dark);
-    text-align: center;
-    padding-bottom: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 30px;
+    box-shadow: 0 2px 10px var(--shadow-light);
+    margin-bottom: 30px;
+}
+
+.contact-form {
     display: flex;
     flex-direction: column;
+    gap: 20px;
 }
 
-.video-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px var(--shadow-dark);
+.textarea-input {
+    resize: vertical; /* Permite redimensionar verticalmente */
+    min-height: 100px; /* Altura mínima */
 }
 
-.video-item video {
-    width: 100%;
-    height: 200px; /* Altura fixa para vídeos */
-    object-fit: cover; /* Recorta para preencher o espaço */
-    display: block;
-    border-bottom: 1px solid var(--border-color);
-    background-color: #000; /* Fundo preto para o vídeo */
+/* Links de navegação entre páginas */
+.navigation-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+    flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
 }
 
-.video-item h3 {
-    margin: 15px 15px 5px;
-    color: var(--light-text);
-    font-size: 1.4em;
-    font-weight: 600;
-    word-break: break-word; /* Quebra palavras longas */
+.navigation-links .btn {
+    min-width: 180px; /* Largura mínima para botões */
 }
 
-.video-item p {
-    margin: 0 15px 15px;
-    color: #b0b0b0;
-    font-size: 0.95em;
-}
-
-.loading-message {
-    text-align: center;
-    grid-column: 1 / -1; /* Ocupa todas as colunas */
-    font-size: 1.2em;
-    color: #aaa;
-    padding: 20px;
-}
-
-/* Utilitários */
-.hidden {
-    display: none;
-}
-
-/* Responsividade */
+/* Mídias queries para responsividade (ajuste se necessário) */
 @media (max-width: 768px) {
-    .app-title {
-        font-size: 2.2rem;
+    .contact-section {
+        padding: 20px;
     }
-    .app-title i {
-        font-size: 1.8rem;
+    .navigation-links {
+        flex-direction: column;
+        align-items: center;
     }
-    .app-slogan {
-        font-size: 1rem;
-    }
-    .app-container {
-        margin: 20px 15px;
-        padding: 15px;
-    }
-    .section-title {
-        font-size: 1.8rem;
-    }
-    .section-title i {
-        font-size: 1.4rem;
-    }
-    .btn {
-        font-size: 1rem;
-        padding: 10px 20px;
-    }
-    .videos-grid {
-        grid-template-columns: 1fr; /* Uma coluna em telas menores */
-    }
-    .video-item video {
-        height: 180px;
+    .navigation-links .btn {
+        width: 100%;
+        max-width: 300px;
     }
 }
