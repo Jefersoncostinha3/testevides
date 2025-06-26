@@ -95,10 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const file = videoFile.files[0];
-        const maxSize = 5 * 1024 * 1024; // 5 MB em bytes
+        const maxSize = 15 * 1024 * 1024; // 15 MB em bytes
 
         if (file.size > maxSize) {
-            showMessage(`O arquivo é muito grande. O tamanho máximo permitido é de 5 MB. Seu arquivo tem ${(file.size / (1024 * 1024)).toFixed(2)} MB.`, 'error');
+            showMessage(`O arquivo é muito grande. O tamanho máximo permitido é de 15 MB. Seu arquivo tem ${(file.size / (1024 * 1024)).toFixed(2)} MB.`, 'error');
             return;
         }
 
