@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Vídeos - Sua Plataforma</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="background-animation"></div>
+    <header class="app-header">
+        <h1 class="app-title"><i class="fas fa-images"></i> Nossa Galeria</h1>
+        <p class="app-slogan">Explore todos os vídeos enviados.</p>
+    </header>
+    <main class="app-container">
+        <section id="videosList" class="videos-list-section">
+            <h2 class="section-title">Todos os Vídeos</h2>
+            <div id="videosContainer" class="videos-grid">
+                <p class="loading-message">Carregando vídeos...</p>
+            </div>
+        </section>
+        <div class="navigation-links">
+            <a href="/" class="btn btn-secondary"><i class="fas fa-home"></i> Voltar para o Início</a>
+            <a href="/contato.html" class="btn btn-secondary"><i class="fas fa-envelope"></i> Fale Conosco</a>
+        </div>
+    </main>
+    <script>
+        // Este script é quase idêntico ao da página inicial, apenas para carregar os vídeos
+        document.addEventListener('DOMContentLoaded', () => {
+            const videosContainer = document.getElementById('videosContainer');
+            const loadingMessage = videosContainer.querySelector('.loading-message');
+
+            const fetchVideos = async () => {
+                videosContainer.innerHTML = '';
+                if (loadingMessage) {
+                    loadingMessage.classList.remove('hidden');
+                    videosContainer.appendChild(loadingMessage);
+                }
+
+                try {
+                    const response = await fetch('/api/videos');
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar vídeos.');
+                    }
+                    const videos = await response.json();
+                    
+                    videosContainer.innerHTML = ''; 
+                    
+                    if (videos.length === 0) {
+                        videosContainer.innerHTML = '<p class="loading-message">Nenhum vídeo disponível ainda. Envie um na página inicial!</p>';
+                        return;
+                    }
+
+                    videos.forEach(video => {
+                        const videoItem = document.createElement('div');
+                        videoItem.classList.add('video-item');
+                        videoItem.innerHTML = `
+                            <video controls src="${video.path}" poster="${video.thumbnailPath}"></video>
+                            <h3>${video.title}</h3>
+                            <p class="upload-date">Enviado em: ${new Date(video.uploadDate).toLocaleDateString('pt-BR')}</p>
+                        `;
+                        videosContainer.appendChild(videoItem);
+                    });
+                } catch (error) {
+                    console.error('Erro ao buscar vídeos:', error);
+                    videosContainer.innerHTML = `<p class="loading-message" style="color: var(--accent-color);">Não foi possível carregar os vídeos: ${error.message}</p>`;
+                }
+            };
+
+            fetchVideos(); // Carrega vídeos ao iniciar a página
+        });
+    </script>
+</body>
+</html>
