@@ -1,20 +1,20 @@
 {
-  "name": "meu-site-videos",
+  "name": "nome-do-seu-projeto",
   "version": "1.0.0",
-  "description": "Um site para upload e visualização de vídeos de até 5MB.",
+  "description": "Uma plataforma simples de upload e exibição de vídeos",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js" // Opcional, para desenvolvimento local
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mongoose": "^8.4.1",
+    "mongoose": "^8.4.3",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
-    "fluent-ffmpeg": "^2.1.2" 
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }
