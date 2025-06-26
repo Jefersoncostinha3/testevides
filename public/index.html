@@ -3,39 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Site de Vídeos</title>
+    <title>Sua Plataforma de Vídeos</title>
     <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1>Minha Galeria de Vídeos</h1>
+    <div class="background-animation"></div> <header class="app-header">
+        <h1 class="app-title"><i class="fas fa-film"></i> Sua Plataforma de Vídeos</h1>
+        <p class="app-slogan">Compartilhe e assista vídeos de forma simples.</p>
     </header>
-    <main>
-        <section id="uploadSection" class="hidden">
-            <h2>Enviar Novo Vídeo</h2>
-            <form id="uploadForm">
-                <label for="videoTitle">Título do Vídeo:</label>
-                <input type="text" id="videoTitle" required>
-                
-                <label for="videoFile">Selecione o Vídeo (até 5MB):</label>
-                <input type="file" id="videoFile" accept="video/*" required>
-                
-                <div id="progressBarContainer">
-                    <div id="progressBar"></div>
-                    <div id="processingIndicator" class="hidden">Processando... <span class="spinner"></span></div>
+    <main class="app-container">
+        <section id="uploadSection" class="upload-section hidden">
+            <h2 class="section-title">Envie Seu Vídeo <i class="fas fa-upload"></i></h2>
+            <form id="uploadForm" class="upload-form">
+                <div class="form-group">
+                    <label for="videoTitle" class="form-label">Título do Vídeo:</label>
+                    <input type="text" id="videoTitle" class="form-input" placeholder="Ex: Meu dia na praia" required>
                 </div>
                 
-                <button type="submit">Enviar Vídeo</button>
-                <p id="message"></p>
+                <div class="form-group">
+                    <label for="videoFile" class="form-label">Selecione o Vídeo (até 5MB):</label>
+                    <input type="file" id="videoFile" class="form-input-file" accept="video/*" required>
+                </div>
+                
+                <div id="progressBarContainer" class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar">0%</div>
+                    <div id="processingIndicator" class="processing-indicator hidden">
+                        Processando... <span class="spinner"></span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Enviar Vídeo</button>
+                <p id="message" class="message"></p>
             </form>
         </section>
 
-        <button id="uploadBtn">Enviar Vídeo</button>
+        <button id="uploadBtn" class="btn btn-secondary upload-toggle-btn">
+            <i class="fas fa-plus-circle"></i> Novo Vídeo
+        </button>
 
-        <section id="videosList">
-            <h2>Vídeos Disponíveis</h2>
-            <div id="videosContainer">
-                </div>
+        <section id="videosList" class="videos-list-section">
+            <h2 class="section-title">Nossos Vídeos <i class="fas fa-video"></i></h2>
+            <div id="videosContainer" class="videos-grid">
+                <p class="loading-message">Carregando vídeos...</p>
+            </div>
         </section>
     </main>
     <script src="/script.js"></script>
