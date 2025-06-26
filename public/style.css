@@ -1,193 +1,140 @@
-/* public/style.css - Tema Dark */
+/* public/style.css */
 
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #1a1a1a; /* Fundo escuro */
-    color: #f0f0f0; /* Texto claro */
-    line-height: 1.6;
+    background-color: #f4f4f4;
+    color: #333;
 }
 
 header {
-    background-color: #000000; /* Preto total para o cabeçalho */
-    color: #ff6600; /* Cor de destaque (laranja) para o título */
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Sombra mais evidente */
-}
-
-header h1 {
-    margin: 0;
-    font-size: 2.2rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-}
-
-header nav button {
-    background-color: #ff6600; /* Botão laranja vibrante */
-    color: white;
-    border: none;
-    padding: 0.7rem 1.5rem;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-header nav button:hover {
-    background-color: #e05500; /* Laranja um pouco mais escuro no hover */
-    transform: translateY(-2px); /* Efeito sutil ao passar o mouse */
+    background-color: #333;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
 }
 
 main {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 30px auto; /* Mais espaço nas margens */
-    background-color: #2a2a2a; /* Fundo mais claro que o body para o conteúdo principal */
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Sombra suave */
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
-    color: #ff6600; /* Títulos em laranja para destaque */
-    border-bottom: 2px solid #3a3a3a; /* Linha divisória discreta */
-    padding-bottom: 10px;
-    margin-bottom: 25px;
+section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+section h2 {
+    color: #555;
+    margin-top: 0;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="file"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#uploadBtn {
+    display: block;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+#message {
+    margin-top: 15px;
+    font-weight: bold;
 }
 
 .hidden {
     display: none;
 }
 
-#uploadSection {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #3a3a3a; /* Linha mais discreta */
-}
-
-#uploadForm label {
-    display: block;
-    margin-bottom: 0.7rem; /* Mais espaço para as labels */
-    font-weight: bold;
-    color: #cccccc; /* Cor para as labels */
-}
-
-#uploadForm input[type="file"],
-#uploadForm input[type="text"] {
-    display: block;
-    width: calc(100% - 22px); /* Ajuste para padding e borda */
-    padding: 12px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #444444; /* Borda mais escura */
-    background-color: #3a3a3a; /* Fundo do input */
-    color: #f0f0f0; /* Texto do input */
-    border-radius: 6px;
-}
-
-#uploadForm input[type="file"]::file-selector-button {
-    background-color: #ff6600;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 15px;
-    transition: background-color 0.2s ease;
-}
-
-#uploadForm input[type="file"]::file-selector-button:hover {
-    background-color: #e05500;
-}
-
-#uploadForm button[type="submit"] {
-    background-color: #007bff; /* Azul para o botão de enviar */
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-#uploadForm button[type="submit"]:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-}
-
-#message {
-    margin-top: 1.5rem;
-    font-weight: bold;
-    color: #ff3333; /* Vermelho para mensagens de erro */
-    background-color: #331a1a; /* Fundo sutil para a mensagem */
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-/* Cores específicas para mensagens de sucesso/informação */
-#message[style*="color: green"] {
-    color: #33ff33 !important; /* Verde vibrante para sucesso */
-    background-color: #1a331a;
-}
-#message[style*="color: blue"] {
-    color: #66ccff !important; /* Azul claro para informação */
-    background-color: #1a1a33;
-}
-#message[style*="color: orange"] {
-    color: #ffcc00 !important; /* Laranja para aviso */
-    background-color: #332a1a;
-}
-
-
-.videos-grid {
+#videosContainer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px; /* Mais espaço entre os vídeos */
+    gap: 20px;
+    margin-top: 20px;
 }
 
 .video-item {
-    background-color: #333333; /* Fundo do item de vídeo */
-    border: 1px solid #444444; /* Borda sutil */
-    border-radius: 10px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Sombra mais profunda */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.video-item:hover {
-    transform: translateY(-5px); /* Efeito de elevação ao passar o mouse */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    padding-bottom: 15px; /* Espaçamento para o título */
 }
 
 .video-item video {
     width: 100%;
     height: auto;
     display: block;
-    background-color: black;
-    border-bottom: 1px solid #444444; /* Borda entre vídeo e texto */
 }
 
 .video-item h3 {
-    margin: 1rem 0.8rem 0.5rem;
-    font-size: 1.3rem;
-    color: #ff6600; /* Título do vídeo em laranja */
+    margin: 15px 10px 5px;
+    color: #333;
+    font-size: 1.2em;
 }
 
 .video-item p {
-    margin: 0 0.8rem 1.2rem;
-    font-size: 0.95rem;
-    color: #b0b0b0; /* Cor mais clara para a descrição */
+    margin: 0 10px 10px;
+    color: #666;
+    font-size: 0.9em;
 }
 
-footer {
+/* Estilos da Barra de Progresso */
+#progressBarContainer {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    height: 20px; /* Altura da barra */
+    overflow: hidden; /* Garante que a barra interna não vaze */
+    display: none; /* Escondido por padrão */
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%; /* Começa em 0% */
+    background-color: #4CAF50; /* Cor da barra de progresso */
+    border-radius: 5px;
     text-align: center;
-    padding: 2rem;
-    background-color: #000000; /* Rodapé preto */
-    color: #888888; /* Texto do rodapé mais sutil */
-    margin-top: 40px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    color: white;
+    line-height: 20px; /* Centraliza o texto verticalmente */
+    transition: width 0.3s ease; /* Animação suave */
 }
