@@ -1,17 +1,17 @@
 // server.js
-require('dotenv').config();
+require('dotenv').config(); // Carrega variáveis de ambiente do .env
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs'); // Para lidar com o sistema de arquivos
 const cron = require('node-cron');
 const ffmpeg = require('fluent-ffmpeg'); // Importa o ffmpeg
 
 // Define o caminho para os binários do FFmpeg e FFprobe se não estiverem no PATH do sistema
-// Isso pode ser útil em ambientes específicos, mas muitas vezes não é necessário se FFmpeg estiver no PATH.
-// Ex: ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-// Ex: ffmpeg.setFfprobePath('/usr/bin/ffprobe');
+// Geralmente não é necessário se FFmpeg estiver instalado corretamente e no PATH.
+// ffmpeg.setFfmpegPath('/usr/bin/ffmpeg'); 
+// ffmpeg.setFfprobePath('/usr/bin/ffprobe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -75,9 +75,9 @@ const upload = multer({
 });
 
 // --- Middlewares ---
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // Para parsear JSON
+app.use(express.urlencoded({ extended: true })); // Para parsear dados de formulário (do formulário HTML)
+app.use(express.static(path.join(__dirname, 'public'))); // Serve os arquivos estáticos do front-end
 
 // Serve os diretórios de vídeos processados e miniaturas estaticamente
 app.use('/uploads/processed', express.static(UPLOADS_PROCESSED_DIR));
@@ -113,20 +113,28 @@ function transcodeVideo(videoInputPath, outputFilename, callback) {
         .videoCodec('libx264') // Codec de vídeo padrão e compatível
         .audioCodec('aac')     // Codec de áudio padrão e compatível
         .format('mp4')         // Formato de saída MP4
+        .on('start', function(commandLine) {
+            console.log('Spawned Ffmpeg with command: ' + commandLine);
+        })
+        .on('progress', function(progress) {
+            console.log('Processing: ' + progress.percent + '% done');
+        })
         .on('end', () => {
             console.log(`Vídeo transcodificado: ${outputPath}`);
             callback(null, `/uploads/processed/${outputFilename}`);
         })
         .on('error', (err) => {
-            console.error('Erro ao transcodificar vídeo:', err);
+            console.error('Erro ao transcodificar vídeo:', err.message);
             callback(err);
-        });
+        })
+        .run();
 }
 
 // --- Rotas da API ---
 
 // Rota de Upload de Vídeos
 app.post('/api/upload', upload.single('video'), async (req, res) => {
+    let processedFilename, thumbnailFilename; // Declarar fora do try para acesso no catch
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'Nenhum arquivo de vídeo enviado ou arquivo inválido.' });
@@ -140,14 +148,16 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
 
         const originalVideoPath = req.file.path;
         const baseFilename = path.parse(req.file.filename).name;
-        const processedFilename = `${baseFilename}_processed.mp4`;
-        const thumbnailFilename = `${baseFilename}_thumb.jpg`;
+        processedFilename = `${baseFilename}_processed.mp4`; // Atribuir aqui
+        thumbnailFilename = `${baseFilename}_thumb.jpg`;     // Atribuir aqui
 
+        console.log('Iniciando processamento de vídeo...');
         // Promessas para gerar miniatura e transcodificar o vídeo em paralelo
         const [thumbnailPublicPath, processedVideoPublicPath] = await Promise.all([
             new Promise((resolve, reject) => generateThumbnail(originalVideoPath, thumbnailFilename, (err, path) => err ? reject(err) : resolve(path))),
             new Promise((resolve, reject) => transcodeVideo(originalVideoPath, processedFilename, (err, path) => err ? reject(err) : resolve(path)))
         ]);
+        console.log('Processamento de vídeo concluído (Promise.all resolvido).');
 
         // Opcional: Remover o vídeo original após o processamento bem-sucedido
         fs.unlink(originalVideoPath, (err) => {
@@ -170,16 +180,26 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
         res.status(201).json({ message: 'Vídeo enviado e processado com sucesso!', video: newVideo });
 
     } catch (error) {
-        console.error('Erro no upload ou processamento de vídeo:', error);
-        // Tenta remover o arquivo original e os processados/miniaturas se o erro ocorreu APÓS o upload inicial
+        console.error('Erro FINAL no upload ou processamento de vídeo:', error);
+        // Tenta remover os arquivos se o erro ocorreu APÓS o upload inicial
         if (req.file && fs.existsSync(req.file.path)) {
+            console.log(`Tentando apagar original: ${req.file.path}`);
             fs.unlinkSync(req.file.path);
         }
-        if (fs.existsSync(path.join(UPLOADS_PROCESSED_DIR, processedFilename))) {
-             fs.unlinkSync(path.join(UPLOADS_PROCESSED_DIR, processedFilename));
+        // Verificar se os nomes de arquivo foram definidos antes de tentar construir o path
+        if (processedFilename) {
+            const processedFilePath = path.join(UPLOADS_PROCESSED_DIR, processedFilename);
+            if (fs.existsSync(processedFilePath)) {
+                 console.log(`Tentando apagar processado: ${processedFilePath}`);
+                 fs.unlinkSync(processedFilePath);
+            }
         }
-        if (fs.existsSync(path.join(UPLOADS_THUMBS_DIR, thumbnailFilename))) {
-             fs.unlinkSync(path.join(UPLOADS_THUMBS_DIR, thumbnailFilename));
+        if (thumbnailFilename) {
+            const thumbnailFilePath = path.join(UPLOADS_THUMBS_DIR, thumbnailFilename);
+            if (fs.existsSync(thumbnailFilePath)) {
+                 console.log(`Tentando apagar miniatura: ${thumbnailFilePath}`);
+                 fs.unlinkSync(thumbnailFilePath);
+            }
         }
 
         if (error instanceof multer.MulterError) {
@@ -195,7 +215,7 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
 // Rota para Listar Vídeos (agora pegando o path do vídeo processado e da miniatura)
 app.get('/api/videos', async (req, res) => {
     try {
-        const videos = await Video.find().sort({ uploadDate: -1 });
+        const videos = await Video.find().sort({ uploadDate: -1 }); // Busca os vídeos mais recentes primeiro
         // Mapeia para retornar apenas os paths processados e da miniatura para o frontend
         const formattedVideos = videos.map(video => ({
             _id: video._id,
@@ -252,10 +272,12 @@ async function cleanAllVideos() {
 cron.schedule('0 */6 * * *', () => {
     cleanAllVideos();
 }, {
-    timezone: "America/Sao_Paulo"
+    timezone: "America/Sao_Paulo" // Ou o fuso horário que você desejar
 });
 
-// Rota padrão para servir o index.html (SPA)
+// Rota padrão para servir o index.html (SPA - Single Page Application)
+// Garante que o refresh da página ou acesso direto a rotas não existentes
+// carregue o seu app React/Vue/Vanilla JS.
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
