@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = document.getElementById('message');
     const videosContainer = document.getElementById('videosContainer');
 
+    // NOVOS ELEMENTOS: Barra de progresso
+    const progressBarContainer = document.getElementById('progressBarContainer');
+    const progressBar = document.getElementById('progressBar');
+
     // Função para buscar e exibir vídeos
     const fetchVideos = async () => {
         try {
@@ -27,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const videoItem = document.createElement('div');
                 videoItem.classList.add('video-item');
                 videoItem.innerHTML = `
-                    <video controls src="${video.path}" poster="${video.thumbnailPath}"></video> <-- ALTERADO AQUI
+                    <video controls src="${video.path}" poster="${video.thumbnailPath}"></video>
                     <h3>${video.title}</h3>
                     <p>${video.description || ''}</p>
                 `;
@@ -43,6 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.classList.toggle('hidden');
         if (!uploadSection.classList.contains('hidden')) {
             message.textContent = '';
+            // Esconde a barra de progresso ao abrir a seção de upload
+            progressBarContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressBar.textContent = ''; // Limpa o texto da porcentagem
         }
     });
 
@@ -51,6 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         message.textContent = '';
         message.style.color = 'red';
+
+        // Resetar e esconder a barra de progresso antes de um novo envio
+        progressBarContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '';
 
         if (videoFile.files.length === 0) {
             message.textContent = 'Por favor, selecione um arquivo de vídeo.';
@@ -75,31 +88,73 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('video', file);
         formData.append('title', videoTitle);
 
-        try {
-            message.textContent = 'Enviando e processando vídeo... Isso pode levar alguns minutos.';
-            message.style.color = 'blue';
+        // Mostrar a barra de progresso
+        progressBarContainer.style.display = 'block';
+        message.textContent = 'Iniciando envio...';
+        message.style.color = 'blue';
 
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/upload', true); // true para assíncrono
+
+            // Evento de progresso do upload
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = Math.round(percentComplete) + '%';
+                    message.textContent = `Enviando vídeo: ${Math.round(percentComplete)}%`;
+                }
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                message.textContent = 'Vídeo enviado e processado com sucesso!';
-                message.style.color = 'green';
-                uploadForm.reset();
-                uploadSection.classList.add('hidden');
-                fetchVideos();
-            } else {
-                const errorData = await response.json();
-                message.textContent = `Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`;
+            // Evento quando o upload termina (sucesso ou falha)
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Sucesso
+                    const result = JSON.parse(xhr.responseText);
+                    message.textContent = 'Vídeo enviado e processado com sucesso!';
+                    message.style.color = 'green';
+                    uploadForm.reset();
+                    uploadSection.classList.add('hidden');
+                    progressBarContainer.style.display = 'none'; // Esconde a barra
+                    progressBar.style.width = '0%'; // Reseta a barra
+                    progressBar.textContent = '';
+                    fetchVideos();
+                } else {
+                    // Erro
+                    const errorData = JSON.parse(xhr.responseText);
+                    message.textContent = `Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`;
+                    message.style.color = 'red';
+                    progressBarContainer.style.display = 'none'; // Esconde a barra
+                    progressBar.style.width = '0%'; // Reseta a barra
+                    progressBar.textContent = '';
+                }
+            });
+
+            // Evento de erro de rede
+            xhr.addEventListener('error', () => {
+                message.textContent = `Erro de rede ou servidor.`;
                 message.style.color = 'red';
-            }
+                progressBarContainer.style.display = 'none'; // Esconde a barra
+                progressBar.style.width = '0%'; // Reseta a barra
+                progressBar.textContent = '';
+                console.error('Erro no upload via XHR:', xhr.statusText);
+            });
+
+            xhr.send(formData); // Envia o FormData
+            
+            // Esta mensagem aparecerá após o arquivo ser enviado, mas antes de o servidor responder.
+            // Ela indica que o processamento no servidor está acontecendo.
+            message.textContent = 'Vídeo enviado. Processando no servidor... Isso pode levar alguns minutos.';
+            message.style.color = 'blue';
+
         } catch (error) {
-            message.textContent = `Erro de rede ou servidor: ${error.message}`;
+            message.textContent = `Erro inesperado: ${error.message}`;
             message.style.color = 'red';
-            console.error('Erro no upload:', error);
+            progressBarContainer.style.display = 'none'; // Esconde a barra
+            progressBar.style.width = '0%'; // Reseta a barra
+            progressBar.textContent = '';
+            console.error('Erro geral no script:', error);
         }
     });
 
