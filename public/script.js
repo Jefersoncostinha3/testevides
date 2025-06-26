@@ -7,70 +7,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoTitleInput = document.getElementById('videoTitle');
     const message = document.getElementById('message');
     const videosContainer = document.getElementById('videosContainer');
+    const loadingMessage = videosContainer.querySelector('.loading-message'); // Adicionado
 
     // Elementos da Barra de Progresso e Indicador de Processamento
     const progressBarContainer = document.getElementById('progressBarContainer');
     const progressBar = document.getElementById('progressBar');
-    const processingIndicator = document.getElementById('processingIndicator'); // Novo elemento
+    const processingIndicator = document.getElementById('processingIndicator');
+
+    // Função para exibir mensagens com estilo e transição
+    const showMessage = (text, type = 'info') => {
+        message.textContent = text;
+        message.className = `message show`; // Reseta classes
+        message.setAttribute('data-type', type); // Adiciona tipo para CSS
+    };
+
+    // Função para ocultar mensagens
+    const hideMessage = () => {
+        message.classList.remove('show');
+        // Opcional: Limpar o texto após a transição
+        setTimeout(() => message.textContent = '', 400); 
+    };
 
     // Função para buscar e exibir vídeos
     const fetchVideos = async () => {
+        videosContainer.innerHTML = ''; // Limpa antes de carregar
+        if (loadingMessage) {
+            loadingMessage.classList.remove('hidden'); // Mostra a mensagem de carregamento
+            videosContainer.appendChild(loadingMessage);
+        }
+
         try {
             const response = await fetch('/api/videos');
             if (!response.ok) {
                 throw new Error('Erro ao buscar vídeos.');
             }
             const videos = await response.json();
-            videosContainer.innerHTML = '';
-
+            
+            videosContainer.innerHTML = ''; // Limpa novamente após a busca
+            
             if (videos.length === 0) {
-                videosContainer.innerHTML = '<p>Nenhum vídeo disponível ainda. Seja o primeiro a enviar!</p>';
+                videosContainer.innerHTML = '<p class="loading-message">Nenhum vídeo disponível ainda. Seja o primeiro a enviar!</p>';
                 return;
             }
 
             videos.forEach(video => {
                 const videoItem = document.createElement('div');
                 videoItem.classList.add('video-item');
-                // Usando thumbnailPath para o poster do vídeo
                 videoItem.innerHTML = `
                     <video controls src="${video.path}" poster="${video.thumbnailPath}"></video>
                     <h3>${video.title}</h3>
-                    <p>${video.description || ''}</p>
+                    <p class="upload-date">Enviado em: ${new Date(video.uploadDate).toLocaleDateString('pt-BR')}</p>
                 `;
                 videosContainer.appendChild(videoItem);
             });
         } catch (error) {
             console.error('Erro ao buscar vídeos:', error);
-            videosContainer.innerHTML = `<p style="color: red;">Não foi possível carregar os vídeos: ${error.message}</p>`;
+            videosContainer.innerHTML = `<p class="loading-message" style="color: var(--accent-color);">Não foi possível carregar os vídeos: ${error.message}</p>`;
         }
     };
 
     uploadBtn.addEventListener('click', () => {
         uploadSection.classList.toggle('hidden');
         if (!uploadSection.classList.contains('hidden')) {
-            message.textContent = '';
+            hideMessage(); // Esconde mensagem ao abrir
             // Esconde e reseta a barra de progresso e o indicador ao abrir a seção de upload
             progressBarContainer.style.display = 'none';
             progressBar.style.width = '0%';
-            progressBar.textContent = '';
-            processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
+            progressBar.textContent = '0%';
+            processingIndicator.classList.add('hidden');
         }
     });
 
     uploadForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        message.textContent = '';
-        message.style.color = 'red';
+        hideMessage(); // Esconde mensagens anteriores
 
         // Resetar e esconder a barra de progresso e o indicador antes de um novo envio
         progressBarContainer.style.display = 'none';
         progressBar.style.width = '0%';
-        progressBar.textContent = '';
-        processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
+        progressBar.textContent = '0%';
+        processingIndicator.classList.add('hidden');
 
         if (videoFile.files.length === 0) {
-            message.textContent = 'Por favor, selecione um arquivo de vídeo.';
+            showMessage('Por favor, selecione um arquivo de vídeo.', 'error');
             return;
         }
 
@@ -78,13 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxSize = 5 * 1024 * 1024; // 5 MB em bytes
 
         if (file.size > maxSize) {
-            message.textContent = `O arquivo é muito grande. O tamanho máximo permitido é de 5 MB. Seu arquivo tem ${(file.size / (1024 * 1024)).toFixed(2)} MB.`;
+            showMessage(`O arquivo é muito grande. O tamanho máximo permitido é de 5 MB. Seu arquivo tem ${(file.size / (1024 * 1024)).toFixed(2)} MB.`, 'error');
             return;
         }
 
         const videoTitle = videoTitleInput.value.trim();
         if (!videoTitle) {
-            message.textContent = 'Por favor, insira um título para o vídeo.';
+            showMessage('Por favor, insira um título para o vídeo.', 'error');
             return;
         }
 
@@ -94,12 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mostrar a barra de progresso
         progressBarContainer.style.display = 'block';
-        message.textContent = 'Iniciando envio...';
-        message.style.color = 'blue';
+        showMessage('Iniciando envio...', 'info');
 
         try {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/upload', true); // true para assíncrono
+            xhr.open('POST', '/api/upload', true);
 
             // Evento de progresso do upload
             xhr.upload.addEventListener('progress', (e) => {
@@ -107,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const percentComplete = (e.loaded / e.total) * 100;
                     progressBar.style.width = percentComplete + '%';
                     progressBar.textContent = Math.round(percentComplete) + '%';
-                    message.textContent = `Enviando vídeo: ${Math.round(percentComplete)}%`;
+                    showMessage(`Enviando vídeo: ${Math.round(percentComplete)}%`, 'info');
                 }
             });
 
@@ -118,55 +137,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     // Sucesso
                     const result = JSON.parse(xhr.responseText);
-                    message.textContent = 'Vídeo enviado e processado com sucesso!';
-                    message.style.color = 'green';
+                    showMessage('Vídeo enviado e salvo com sucesso!', 'success');
                     uploadForm.reset();
                     uploadSection.classList.add('hidden');
-                    progressBarContainer.style.display = 'none'; // Esconde a barra
-                    progressBar.style.width = '0%'; // Reseta a barra
-                    progressBar.textContent = '';
-                    fetchVideos();
+                    progressBarContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                    fetchVideos(); // Atualiza a lista de vídeos
                 } else {
                     // Erro
                     const errorData = JSON.parse(xhr.responseText);
-                    message.textContent = `Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`;
-                    message.style.color = 'red';
-                    progressBarContainer.style.display = 'none'; // Esconde a barra
-                    progressBar.style.width = '0%'; // Reseta a barra
-                    progressBar.textContent = '';
+                    showMessage(`Erro ao enviar o vídeo: ${errorData.message || 'Erro desconhecido.'}`, 'error');
+                    progressBarContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
                 }
             });
 
             // Evento de erro de rede
             xhr.addEventListener('error', () => {
-                processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento em caso de erro de rede
-                message.textContent = `Erro de rede ou servidor.`;
-                message.style.color = 'red';
-                progressBarContainer.style.display = 'none'; // Esconde a barra
-                progressBar.style.width = '0%'; // Reseta a barra
-                progressBar.textContent = '';
+                processingIndicator.classList.add('hidden');
+                showMessage(`Erro de rede ou servidor.`, 'error');
+                progressBarContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
                 console.error('Erro no upload via XHR:', xhr.statusText);
             });
 
-            xhr.send(formData); // Envia o FormData
+            xhr.send(formData);
             
-            // Esta mensagem e o indicador aparecerão após o arquivo ser enviado,
-            // mas antes de o servidor responder. Ela indica que o processamento no servidor está acontecendo.
-            message.textContent = 'Vídeo enviado. Processando no servidor... Isso pode levar alguns minutos.';
-            message.style.color = 'blue';
-            processingIndicator.classList.remove('hidden'); // Mostra o indicador de processamento
+            showMessage('Vídeo enviado. Salvando no servidor...', 'info');
+            processingIndicator.classList.remove('hidden');
 
-        } // catch para erros que ocorrem antes do XHR ser enviado (ex: validação de arquivo)
+        } 
         catch (error) {
-            message.textContent = `Erro inesperado: ${error.message}`;
-            message.style.color = 'red';
+            showMessage(`Erro inesperado: ${error.message}`, 'error');
             progressBarContainer.style.display = 'none';
             progressBar.style.width = '0%';
-            progressBar.textContent = '';
-            processingIndicator.classList.add('hidden'); // Esconde o indicador de processamento
+            progressBar.textContent = '0%';
+            processingIndicator.classList.add('hidden');
             console.error('Erro geral no script:', error);
         }
     });
 
-    fetchVideos();
+    fetchVideos(); // Carrega vídeos ao iniciar a página
 });
